@@ -20,3 +20,5 @@
 ###< symfony/asset-mapper ###
 
 /public/uploads/
+
+.idea
