@@ -62,7 +62,8 @@ class ArticleRepository extends ServiceEntityRepository
             ->join('a.author', 'u')
             ->where('a.status = :status')
             ->setParameter('status', ArticleStatus::Published)
-            ->orderBy('a.publishedAt', 'DESC');
+            ->orderBy('a.publishedAt', 'DESC')
+            ->addOrderBy('a.id', 'DESC');
 
         if ($category) {
             $qb->andWhere('a.category = :category')

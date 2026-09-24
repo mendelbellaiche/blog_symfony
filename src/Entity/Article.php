@@ -11,6 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ArticleRepository::class)]
 #[ORM\Index(name: 'article_fulltext', columns: ['title', 'content'], flags: ['fulltext'])]
+#[ORM\HasLifecycleCallbacks]
 class Article
 {
     #[ORM\Id]
@@ -240,6 +241,15 @@ class Article
     public function getApprovedComments(): Collection
     {
         return $this->comments->filter(fn (Comment $comment) => $comment->isApproved());
+    }
+
+    #[ORM\PrePersist]
+    #[ORM\PreUpdate]
+    public function ensurePublishedAt(): void
+    {
+        if ($this->status === ArticleStatus::Published && $this->publishedAt === null) {
+            $this->publishedAt = new \DateTimeImmutable();
+        }
     }
 
     public function __toString(): string
