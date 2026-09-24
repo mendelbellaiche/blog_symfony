@@ -44,10 +44,8 @@
                  class="mb-10 aspect-[16/9] w-full rounded-2xl object-cover shadow-sm">
         {% endif %}
 
-        <div class="prose prose-stone prose-lg max-w-none">
-            {% for paragraph in article.content|split("\n\n") %}
-                <p>{{ paragraph }}</p>
-            {% endfor %}
+        <div class="prose prose-stone prose-lg max-w-none prose-pre:rounded-xl prose-pre:bg-[#0d1117]">
+            {{ article.content|markdown }}
         </div>
     </article>
 

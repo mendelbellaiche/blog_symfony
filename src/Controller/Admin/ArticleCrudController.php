@@ -75,7 +75,8 @@ class ArticleCrudController extends AbstractCrudController
         yield DateTimeField::new('publishedAt', 'Date de publication');
         yield AssociationField::new('author', 'Auteur')->hideOnForm();
         yield TextareaField::new('content', 'Contenu')
-            ->setNumOfRows(15)
+            ->setNumOfRows(20)
+            ->setHelp('Syntaxe Markdown : ## Titre, **gras**, *italique*, [lien](url), `code`, et ```php pour un bloc de code.')
             ->hideOnIndex();
     }
 

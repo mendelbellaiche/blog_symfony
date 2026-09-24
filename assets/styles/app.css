@@ -1,2 +1,8 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+
+/* Le bloc <pre> de prose gère déjà le fond et les marges */
+.prose pre code.hljs {
+    padding: 0;
+    background: transparent;
+}

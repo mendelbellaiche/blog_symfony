@@ -40,7 +40,7 @@
                         </a>
                     </h2>
 
-                    <p class="leading-relaxed text-stone-600">{{ article.content|slice(0, 200) }}…</p>
+                    <p class="leading-relaxed text-stone-600">{{ article.content|markdown_excerpt }}</p>
 
                     <a href="{{ path('article_show', {slug: article.slug}) }}"
                        class="mt-4 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800">

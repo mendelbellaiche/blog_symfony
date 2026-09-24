@@ -27,4 +27,12 @@ return [
     '@hotwired/stimulus' => ['version' => '3.2.2'],
     '@symfony/stimulus-bundle' => ['path' => './vendor/symfony/stimulus-bundle/assets/dist/loader.js'],
     '@hotwired/turbo' => ['version' => '8.0.23'],
+    'highlight.js/styles/github-dark.css' => ['version' => '11.12.0', 'type' => 'css'],
+    'highlight.js/lib/core' => ['version' => '11.12.0'],
+    'highlight.js/lib/languages/php' => ['version' => '11.12.0'],
+    'highlight.js/lib/languages/bash' => ['version' => '11.12.0'],
+    'highlight.js/lib/languages/javascript' => ['version' => '11.12.0'],
+    'highlight.js/lib/languages/yaml' => ['version' => '11.12.0'],
+    'highlight.js/lib/languages/twig' => ['version' => '11.12.0'],
+    'highlight.js/lib/languages/sql' => ['version' => '11.12.0'],
 ];
