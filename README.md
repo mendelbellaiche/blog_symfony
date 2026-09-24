@@ -1,4 +1,4 @@
-# MonBlog
+# Le Carnet PHP
 
 Blog technique consacré à PHP et à son écosystème, développé avec **Symfony 8**.
 

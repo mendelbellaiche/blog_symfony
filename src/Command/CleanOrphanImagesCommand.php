@@ -3,6 +3,7 @@
 namespace App\Command;
 
 use App\Repository\ArticleRepository;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -26,6 +27,7 @@ final class CleanOrphanImagesCommand extends Command
         private Filesystem $filesystem,
         #[Autowire('%kernel.project_dir%/public/uploads/articles')]
         private string $uploadDir,
+        private LoggerInterface $auditLogger
     ) {
         parent::__construct();
     }
@@ -70,6 +72,7 @@ final class CleanOrphanImagesCommand extends Command
 
             if (!$dryRun) {
                 $this->filesystem->remove($file->getPathname());
+                $this->auditLogger->info('Image orpheline supprimée', ['file' => $name]);
             }
 
             $count++;

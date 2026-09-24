@@ -7,6 +7,7 @@ use App\Entity\Category;
 use App\Entity\Tag;
 use App\Enum\ArticleStatus;
 use App\Repository\ArticleRepository;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
@@ -62,6 +63,7 @@ final class ArticleController extends AbstractController
         Request $request,
         EntityManagerInterface $em,
         #[CurrentUser] ?User $user,
+        LoggerInterface $auditLogger
     ): Response {
         if ($article->getStatus() !== ArticleStatus::Published) {
             throw $this->createNotFoundException();
@@ -82,6 +84,12 @@ final class ArticleController extends AbstractController
 
             $em->persist($comment);
             $em->flush();
+
+            $auditLogger->info('Nouveau commentaire', [
+                'user' => $user->getEmail(),
+                'article' => $article->getSlug(),
+                'approved' => $comment->isApproved(),
+            ]);
 
             $this->addFlash('success', $comment->isApproved()
                 ? 'Ton commentaire a été publié.'

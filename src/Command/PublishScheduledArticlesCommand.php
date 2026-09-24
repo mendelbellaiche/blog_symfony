@@ -5,6 +5,7 @@ namespace App\Command;
 use App\Enum\ArticleStatus;
 use App\Repository\ArticleRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -22,6 +23,7 @@ final class PublishScheduledArticlesCommand extends Command
     public function __construct(
         private ArticleRepository $articleRepository,
         private EntityManagerInterface $em,
+        private LoggerInterface $auditLogger,
     ) {
         parent::__construct();
     }
@@ -35,6 +37,9 @@ final class PublishScheduledArticlesCommand extends Command
         foreach ($articles as $article) {
             $article->setStatus(ArticleStatus::Published);
             $io->writeln(sprintf('Publication : %s', $article->getTitle()));
+            $this->auditLogger->info('Article publié automatiquement', [
+                'article' => $article->getSlug(),
+            ]);
         }
 
         $this->em->flush();

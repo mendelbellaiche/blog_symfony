@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Accueil{% endblock %} · MonBlog</title>
+    <title>{% block title %}Accueil{% endblock %} · {{ blog_name }}</title>
     {% block stylesheets %}
     {% endblock %}
 
@@ -14,8 +14,9 @@
 <body class="flex min-h-screen flex-col bg-stone-50 text-stone-800 antialiased">
 <header class="border-b border-stone-200 bg-white">
     <nav class="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
-        <a href="{{ path('article_index') }}" class="text-xl font-bold tracking-tight text-stone-900">
-            Mon<span class="text-indigo-600">Blog</span>
+        <a href="{{ path('article_index') }}" class="flex items-center gap-2 text-xl font-bold tracking-tight text-stone-900">
+            <span class="rounded-md bg-indigo-600 px-1.5 py-0.5 font-mono text-sm text-white">&lt;?</span>
+            {{ blog_name }}
         </a>
 
         <form action="{{ path('article_search') }}" method="get" class="mx-4 hidden flex-1 sm:block sm:max-w-xs">
@@ -64,7 +65,7 @@
 </main>
 
 <footer class="border-t border-stone-200 py-6 text-center text-sm text-stone-500">
-    © {{ 'now'|date('Y') }} MonBlog · Propulsé par Symfony
+    © {{ 'now'|date('Y') }} {{ blog_name }} · Propulsé par Symfony
 </footer>
 </body>
 </html>
