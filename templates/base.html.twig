@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Accueil{% endblock %} · MonBlog</title>
+    {% block stylesheets %}
+    {% endblock %}
+
+    {% block javascripts %}
+        {% block importmap %}{{ importmap('app') }}{% endblock %}
+    {% endblock %}
+</head>
+<body class="flex min-h-screen flex-col bg-stone-50 text-stone-800 antialiased">
+<header class="border-b border-stone-200 bg-white">
+    <nav class="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
+        <a href="{{ path('article_index') }}" class="text-xl font-bold tracking-tight text-stone-900">
+            Mon<span class="text-indigo-600">Blog</span>
+        </a>
+
+        <form action="{{ path('article_search') }}" method="get" class="mx-4 hidden flex-1 sm:block sm:max-w-xs">
+            <label for="search" class="sr-only">Rechercher</label>
+            <div class="relative">
+                <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.45 4.39l3.08 3.08a.75.75 0 1 1-1.06 1.06l-3.08-3.08A7 7 0 0 1 2 9Z" clip-rule="evenodd"/>
+                </svg>
+                <input type="search" name="q" id="search"
+                       value="{{ app.request.query.get('q') }}"
+                       placeholder="Rechercher un article…"
+                       class="w-full rounded-lg border border-stone-300 bg-stone-50 py-2 pl-9 pr-3 text-sm text-stone-900 placeholder:text-stone-400 focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-200">
+            </div>
+        </form>
+
+        <div class="flex items-center gap-4 text-sm">
+            {% if app.user %}
+                <span class="text-stone-500">
+                    Bonjour <span class="font-medium text-stone-800">{{ app.user.pseudo }}</span>
+                </span>
+                {% if is_granted('ROLE_AUTHOR') %}
+                    <a href="{{ path('admin') }}" class="font-medium text-indigo-600 hover:text-indigo-800">Administration</a>
+                {% endif %}
+                <a href="{{ path('app_logout') }}" class="text-stone-600 hover:text-indigo-600">Déconnexion</a>
+            {% else %}
+                <a href="{{ path('app_register') }}" class="text-stone-600 hover:text-indigo-600">Inscription</a>
+                <a href="{{ path('app_login') }}"
+                   class="rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700">
+                    Connexion
+                </a>
+            {% endif %}
+        </div>
+    </nav>
+</header>
+
+<main class="mx-auto w-full max-w-4xl flex-1 px-4 py-10">
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="mb-6 rounded-lg border px-4 py-3 text-sm {{ type == 'success' ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-700' }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    {% block body %}{% endblock %}
+</main>
+
+<footer class="border-t border-stone-200 py-6 text-center text-sm text-stone-500">
+    © {{ 'now'|date('Y') }} MonBlog · Propulsé par Symfony
+</footer>
+</body>
+</html>

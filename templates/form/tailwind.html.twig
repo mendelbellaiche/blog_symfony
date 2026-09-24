@@ -1,0 +1,60 @@
+{% extends 'form_div_layout.html.twig' %}
+
+{# Chaque champ : label, champ, aide, erreurs #}
+{%- block form_row -%}
+    <div class="mb-5">
+        {{- form_label(form) -}}
+        {{- form_widget(form) -}}
+        {{- form_help(form) -}}
+        {{- form_errors(form) -}}
+    </div>
+{%- endblock form_row -%}
+
+{# Les cases à cocher : la case à gauche, le texte à droite #}
+{%- block checkbox_row -%}
+    <div class="mb-5">
+        <div class="flex items-center gap-2">
+            {{- form_widget(form) -}}
+            {{- form_label(form) -}}
+        </div>
+        {{- form_errors(form) -}}
+    </div>
+{%- endblock checkbox_row -%}
+
+{# Champs texte, email, mot de passe... #}
+{%- block form_widget_simple -%}
+    {%- set state = errors|length ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'border-stone-300 focus:border-indigo-500 focus:ring-indigo-200' -%}
+    {%- set attr = attr|merge({class: (attr.class|default('') ~ ' mt-1 block w-full rounded-lg border bg-white px-3 py-2 text-stone-900 shadow-sm focus:outline-none focus:ring-2 ' ~ state)|trim}) -%}
+    {{- parent() -}}
+{%- endblock form_widget_simple -%}
+
+{# Zones de texte (on s'en servira pour les commentaires) #}
+{%- block textarea_widget -%}
+    {%- set attr = attr|merge({class: (attr.class|default('') ~ ' mt-1 block w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200')|trim}) -%}
+    {{- parent() -}}
+{%- endblock textarea_widget -%}
+
+{%- block checkbox_widget -%}
+    {%- set attr = attr|merge({class: (attr.class|default('') ~ ' h-4 w-4 rounded border-stone-300 accent-indigo-600')|trim}) -%}
+    {{- parent() -}}
+{%- endblock checkbox_widget -%}
+
+{%- block form_label -%}
+    {%- set label_attr = label_attr|merge({class: (label_attr.class|default('') ~ ' text-sm font-medium text-stone-700')|trim}) -%}
+    {{- parent() -}}
+{%- endblock form_label -%}
+
+{%- block form_help -%}
+    {%- set help_attr = help_attr|merge({class: (help_attr.class|default('') ~ ' mt-1 text-sm text-stone-500')|trim}) -%}
+    {{- parent() -}}
+{%- endblock form_help -%}
+
+{%- block form_errors -%}
+    {%- if errors|length > 0 -%}
+        <ul class="mt-1 space-y-1 text-sm text-red-600">
+            {%- for error in errors -%}
+                <li>{{ error.message }}</li>
+            {%- endfor -%}
+        </ul>
+    {%- endif -%}
+{%- endblock form_errors -%}

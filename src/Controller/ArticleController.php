@@ -1,0 +1,128 @@
+<?php
+
+namespace App\Controller;
+
+use App\Entity\Article;
+use App\Entity\Category;
+use App\Entity\Tag;
+use App\Enum\ArticleStatus;
+use App\Repository\ArticleRepository;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
+use Symfony\Component\Routing\Attribute\Route;
+use App\Entity\Comment;
+use App\Entity\User;
+use App\Form\CommentType;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Http\Attribute\CurrentUser;
+
+final class ArticleController extends AbstractController
+{
+    public function __construct(private ArticleRepository $articleRepository)
+    {
+    }
+
+    #[Route('/', name: 'article_index')]
+    public function index(#[MapQueryParameter] int $page = 1): Response
+    {
+        return $this->renderList($page, 'Derniers articles');
+    }
+
+    #[Route('/categorie/{slug:category}', name: 'article_by_category')]
+    public function byCategory(Category $category, #[MapQueryParameter] int $page = 1): Response
+    {
+        return $this->renderList($page, 'Catégorie : ' . $category->getName(), category: $category);
+    }
+
+    #[Route('/tag/{slug:tag}', name: 'article_by_tag')]
+    public function byTag(Tag $tag, #[MapQueryParameter] int $page = 1): Response
+    {
+        return $this->renderList($page, 'Tag : #' . $tag->getName(), tag: $tag);
+    }
+
+    #[Route('/recherche', name: 'article_search')]
+    public function search(
+        #[MapQueryParameter] string $q = '',
+        #[MapQueryParameter] int $page = 1,
+    ): Response {
+        $q = trim($q);
+
+        if ($q === '') {
+            return $this->redirectToRoute('article_index');
+        }
+
+        return $this->renderList($page, sprintf('Résultats pour « %s »', $q), search: $q);
+    }
+
+    #[Route('/article/{slug:article}', name: 'article_show', methods: ['GET', 'POST'])]
+    public function show(
+        Article $article,
+        Request $request,
+        EntityManagerInterface $em,
+        #[CurrentUser] ?User $user,
+    ): Response {
+        if ($article->getStatus() !== ArticleStatus::Published) {
+            throw $this->createNotFoundException();
+        }
+
+        $comment = new Comment();
+        $form = $this->createForm(CommentType::class, $comment);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted()) {
+            $this->denyAccessUnlessGranted('ROLE_USER');
+        }
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $comment->setAuthor($user)
+                ->setArticle($article)
+                ->setApproved($this->isGranted('ROLE_ADMIN'));
+
+            $em->persist($comment);
+            $em->flush();
+
+            $this->addFlash('success', $comment->isApproved()
+                ? 'Ton commentaire a été publié.'
+                : 'Merci ! Ton commentaire sera visible après validation par un modérateur.'
+            );
+
+            return $this->redirectToRoute('article_show', [
+                'slug' => $article->getSlug(),
+                '_fragment' => 'comments',
+            ]);
+        }
+
+        return $this->render('article/show.html.twig', [
+            'article' => $article,
+            'commentForm' => $form,
+        ]);
+    }
+
+    private function renderList(
+        int $page,
+        string $title,
+        ?Category $category = null,
+        ?Tag $tag = null,
+        ?string $search = null,
+    ): Response {
+        $page = max(1, $page);
+        $articles = $this->articleRepository->findPublishedPaginated($page, $category, $tag, $search);
+        $pages = (int) ceil($articles->getTotalCount() / ArticleRepository::ARTICLES_PER_PAGE);
+
+        if ($page > max(1, $pages)) {
+            throw $this->createNotFoundException();
+        }
+
+        return $this->render('article/index.html.twig', [
+            'articles' => $articles,
+            'title' => $title,
+            'page' => $page,
+            'pages' => $pages,
+            'search' => $search,
+            'total' => $articles->getTotalCount(),
+        ]);
+    }
+
+}

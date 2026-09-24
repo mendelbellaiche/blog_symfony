@@ -1,0 +1,64 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block body %}
+    <h1 class="text-3xl font-bold tracking-tight text-stone-900">{{ title }}</h1>
+    {% if search %}
+        <p class="mt-2 text-stone-500">
+            {{ total }} article{{ total > 1 ? 's' }} trouvé{{ total > 1 ? 's' }}
+        </p>
+    {% endif %}
+    <div class="mb-8"></div>
+
+    <div class="space-y-6">
+        {% for article in articles %}
+            <article class="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm transition hover:shadow-md">
+                {% if article.image %}
+                    <a href="{{ path('article_show', {slug: article.slug}) }}">
+                        <img src="{{ asset('uploads/articles/' ~ article.image) }}"
+                             alt="{{ article.title }}"
+                             class="aspect-[16/9] w-full object-cover"
+                             loading="lazy">
+                    </a>
+                {% endif %}
+
+                <div class="p-6">
+                    <div class="mb-3 flex flex-wrap items-center gap-2 text-sm text-stone-500">
+                        <a href="{{ path('article_by_category', {slug: article.category.slug}) }}"
+                           class="rounded-full bg-indigo-50 px-3 py-1 font-medium text-indigo-700 hover:bg-indigo-100">
+                            {{ article.category.name }}
+                        </a>
+                        <span>{{ article.publishedAt|date('d/m/Y') }}</span>
+                        <span>·</span>
+                        <span>{{ article.author.pseudo }}</span>
+                    </div>
+
+                    <h2 class="mb-2 text-xl font-semibold text-stone-900">
+                        <a href="{{ path('article_show', {slug: article.slug}) }}" class="hover:text-indigo-600">
+                            {{ article.title }}
+                        </a>
+                    </h2>
+
+                    <p class="leading-relaxed text-stone-600">{{ article.content|slice(0, 200) }}…</p>
+
+                    <a href="{{ path('article_show', {slug: article.slug}) }}"
+                       class="mt-4 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800">
+                        Lire la suite →
+                    </a>
+                </div>
+            </article>
+        {% else %}
+            <p class="rounded-xl border border-dashed border-stone-300 p-10 text-center text-stone-500">
+                {% if search %}
+                    Aucun article ne correspond à ta recherche.
+                    <a href="{{ path('article_index') }}" class="font-medium text-indigo-600 hover:text-indigo-800">Voir tous les articles</a>
+                {% else %}
+                    Aucun article pour le moment.
+                {% endif %}
+            </p>
+        {% endfor %}
+    </div>
+
+    {{ include('_pagination.html.twig') }}
+{% endblock %}
