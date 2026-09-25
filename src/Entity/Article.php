@@ -243,6 +243,11 @@ class Article
         return $this->comments->filter(fn (Comment $comment) => $comment->isApproved());
     }
 
+    public function isPublished(): bool
+    {
+        return $this->status === ArticleStatus::Published;
+    }
+
     #[ORM\PrePersist]
     #[ORM\PreUpdate]
     public function ensurePublishedAt(): void

@@ -82,4 +82,21 @@ final class BlogTest extends WebTestCase
         $user = static::getContainer()->get(UserRepository::class)->findOneBy(['email' => $email]);
         $this->client->loginUser($user);
     }
+
+    public function testAdminCanPreviewDraft(): void
+    {
+        $draft = static::getContainer()->get(ArticleRepository::class)
+            ->findOneBy(['status' => ArticleStatus::Draft]);
+
+        if (!$draft) {
+            self::markTestSkipped('Aucun brouillon dans les fixtures.');
+        }
+
+        $this->loginAs('admin@blog.fr');
+        $this->client->request('GET', '/article/' . $draft->getSlug());
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'Aperçu');
+        self::assertResponseHeaderSame('X-Robots-Tag', 'noindex, nofollow');
+    }
 }

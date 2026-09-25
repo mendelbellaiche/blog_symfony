@@ -5,7 +5,6 @@ namespace App\Controller;
 use App\Entity\Article;
 use App\Entity\Category;
 use App\Entity\Tag;
-use App\Enum\ArticleStatus;
 use App\Repository\ArticleRepository;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -18,6 +17,7 @@ use App\Form\CommentType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Http\Attribute\CurrentUser;
+use App\Security\Voter\ArticleVoter;
 
 final class ArticleController extends AbstractController
 {
@@ -62,50 +62,63 @@ final class ArticleController extends AbstractController
         Article $article,
         Request $request,
         EntityManagerInterface $em,
+        LoggerInterface $auditLogger,
         #[CurrentUser] ?User $user,
-        LoggerInterface $auditLogger
     ): Response {
-        if ($article->getStatus() !== ArticleStatus::Published) {
+        // Un article non publié n'est visible que par son auteur et l'admin
+        if (!$article->isPublished() && !$this->isGranted(ArticleVoter::EDIT, $article)) {
             throw $this->createNotFoundException();
         }
 
-        $comment = new Comment();
-        $form = $this->createForm(CommentType::class, $comment);
-        $form->handleRequest($request);
+        $commentForm = null;
 
-        if ($form->isSubmitted()) {
-            $this->denyAccessUnlessGranted('ROLE_USER');
+        // Pas de commentaires sur un article qui n'est pas encore en ligne
+        if ($article->isPublished()) {
+            $comment = new Comment();
+            $commentForm = $this->createForm(CommentType::class, $comment);
+            $commentForm->handleRequest($request);
+
+            if ($commentForm->isSubmitted()) {
+                $this->denyAccessUnlessGranted('ROLE_USER');
+            }
+
+            if ($commentForm->isSubmitted() && $commentForm->isValid()) {
+                $comment->setAuthor($user)
+                    ->setArticle($article)
+                    ->setApproved($this->isGranted('ROLE_ADMIN'));
+
+                $em->persist($comment);
+                $em->flush();
+
+                $auditLogger->info('Nouveau commentaire', [
+                    'user' => $user->getEmail(),
+                    'article' => $article->getSlug(),
+                    'approved' => $comment->isApproved(),
+                ]);
+
+                $this->addFlash('success', $comment->isApproved()
+                    ? 'Ton commentaire a été publié.'
+                    : 'Merci ! Ton commentaire sera visible après validation par un modérateur.'
+                );
+
+                return $this->redirectToRoute('article_show', [
+                    'slug' => $article->getSlug(),
+                    '_fragment' => 'comments',
+                ]);
+            }
         }
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $comment->setAuthor($user)
-                ->setArticle($article)
-                ->setApproved($this->isGranted('ROLE_ADMIN'));
-
-            $em->persist($comment);
-            $em->flush();
-
-            $auditLogger->info('Nouveau commentaire', [
-                'user' => $user->getEmail(),
-                'article' => $article->getSlug(),
-                'approved' => $comment->isApproved(),
-            ]);
-
-            $this->addFlash('success', $comment->isApproved()
-                ? 'Ton commentaire a été publié.'
-                : 'Merci ! Ton commentaire sera visible après validation par un modérateur.'
-            );
-
-            return $this->redirectToRoute('article_show', [
-                'slug' => $article->getSlug(),
-                '_fragment' => 'comments',
-            ]);
-        }
-
-        return $this->render('article/show.html.twig', [
+        $response = $this->render('article/show.html.twig', [
             'article' => $article,
-            'commentForm' => $form,
+            'commentForm' => $commentForm,
         ]);
+
+        // Les moteurs de recherche ne doivent jamais indexer un aperçu
+        if (!$article->isPublished()) {
+            $response->headers->set('X-Robots-Tag', 'noindex, nofollow');
+        }
+
+        return $response;
     }
 
     private function renderList(

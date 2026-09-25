@@ -48,7 +48,14 @@ class ArticleCrudController extends AbstractCrudController
 
     public function configureActions(Actions $actions): Actions
     {
+        $preview = Action::new('preview', 'Aperçu', 'fa fa-eye')
+            ->linkToUrl(fn (Article $article) => $this->generateUrl('article_show', ['slug' => $article->getSlug()]))
+            ->setHtmlAttributes(['target' => '_blank']);
+
         return $actions
+            ->add(Crud::PAGE_INDEX, $preview)
+            ->add(Crud::PAGE_EDIT, $preview)
+            ->setPermission('preview', ArticleVoter::EDIT)
             ->setPermission(Action::EDIT, ArticleVoter::EDIT)
             ->setPermission(Action::DELETE, ArticleVoter::DELETE);
     }
