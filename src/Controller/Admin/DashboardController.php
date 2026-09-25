@@ -40,6 +40,8 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::section('Communauté')->setPermission('ROLE_ADMIN');
         yield MenuItem::linkTo(CommentCrudController::class, 'Commentaires', 'fa fa-comments')
             ->setPermission('ROLE_ADMIN');
+        yield MenuItem::linkTo(UserCrudController::class, 'Utilisateurs', 'fa fa-users')
+            ->setPermission('ROLE_ADMIN');
 
         yield MenuItem::section();
         yield MenuItem::linkToUrl('Retour au blog', 'fa fa-arrow-left', $this->generateUrl('article_index'));
