@@ -1,0 +1,105 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mentions légales{% endblock %}
+
+{% block body %}
+    {# ===== À compléter ===== #}
+    {% set editor = {
+        name: 'Mendel Bellaiche',
+        email: 'bellaichemendel@gmail.com',
+    } %}
+    {% set host = {
+        name: 'Hostinger International Ltd',
+        address: '61 Lordou Vironos Street, 6023 Larnaca, Chypre',
+        phone: '',
+        website: 'https://www.hostinger.com',
+    } %}
+    {% set updatedAt = '2026-10-02' %}
+    {# ======================= #}
+
+    <article class="prose prose-stone mx-auto max-w-3xl">
+        <h1>Mentions légales</h1>
+        <p class="text-sm text-stone-500">Dernière mise à jour : {{ updatedAt|date('d/m/Y') }}</p>
+
+        <h2>Éditeur du site</h2>
+        <p>
+            Le site <strong>{{ app.request.host }}</strong> ({{ blog_name }}) est un blog personnel,
+            édité à titre non professionnel par <strong>{{ editor.name }}</strong>.
+        </p>
+        <p>
+            Conformément à l’article 6, III, 2 de la loi n° 2004-575 du 21 juin 2004 pour la confiance
+            dans l’économie numérique, l’éditeur a choisi de ne pas rendre publiques ses coordonnées personnelles.
+            Celles-ci ont été communiquées à l’hébergeur du site.
+        </p>
+        <p>Contact : <a href="mailto:{{ editor.email }}">{{ editor.email }}</a></p>
+
+        <h2>Directeur de la publication</h2>
+        <p>{{ editor.name }}</p>
+
+        <h2>Hébergeur</h2>
+        <p>
+            {{ host.name }}<br>
+            {{ host.address }}<br>
+            {% if host.phone %}
+                Téléphone : {{ host.phone }}<br>
+            {% endif %}
+            Site web : <a href="{{ host.website }}" rel="noopener">{{ host.website }}</a>
+        </p>
+
+        <h2>Propriété intellectuelle</h2>
+        <p>
+            Les textes, images et illustrations publiés sur ce site sont la propriété de l’éditeur, sauf mention contraire.
+            Toute reproduction, totale ou partielle, sans autorisation préalable est interdite.
+        </p>
+        <p>
+            Les extraits de code présentés dans les articles peuvent en revanche être librement réutilisés
+            dans vos propres projets.
+        </p>
+
+        <h2>Contenus publiés par les utilisateurs</h2>
+        <p>
+            Les commentaires sont publiés sous la responsabilité de leurs auteurs. L’éditeur se réserve le droit
+            de modérer, masquer ou supprimer tout commentaire contraire à la loi ou au respect des autres lecteurs.
+            Pour signaler un contenu, écrivez à <a href="mailto:{{ editor.email }}">{{ editor.email }}</a>.
+        </p>
+
+        <h2>Données personnelles</h2>
+        <p>Le site collecte uniquement les données nécessaires à son fonctionnement :</p>
+        <ul>
+            <li>
+                <strong>Compte utilisateur</strong> : adresse e-mail, pseudo et mot de passe (stocké de façon chiffrée,
+                jamais en clair). Ces données sont conservées tant que le compte existe.
+            </li>
+            <li>
+                <strong>Commentaires</strong> : le contenu publié, sa date et son auteur.
+            </li>
+            <li>
+                <strong>Journaux techniques</strong> : le serveur enregistre l’adresse IP et les pages demandées,
+                pour la sécurité et le diagnostic. Ces journaux sont supprimés automatiquement après 30 jours au plus.
+            </li>
+            <li>
+                <strong>Mesure d’audience</strong> : le nombre de visiteurs est calculé à partir d’une empreinte anonyme
+                et différente chaque jour. Aucune adresse IP n’est conservée pour cette mesure, et aucun cookie n’est utilisé.
+            </li>
+        </ul>
+        <p>
+            Ces données ne sont ni vendues, ni partagées avec des tiers, et sont hébergées dans l’Union européenne.
+        </p>
+        <p>
+            Conformément au règlement général sur la protection des données (RGPD), vous disposez d’un droit d’accès,
+            de rectification, d’effacement, de limitation, d’opposition et de portabilité de vos données.
+            Pour l’exercer, ou pour supprimer votre compte, écrivez à
+            <a href="mailto:{{ editor.email }}">{{ editor.email }}</a>.
+            Vous pouvez également adresser une réclamation à la
+            <a href="https://www.cnil.fr" rel="noopener">CNIL</a>.
+        </p>
+
+        <h2>Cookies</h2>
+        <p>
+            Le site utilise uniquement des cookies strictement nécessaires à son fonctionnement : le cookie de session,
+            qui permet de rester connecté pendant la navigation, et, si vous cochez « Se souvenir de moi »,
+            un cookie de connexion automatique. Ces cookies ne servent ni à la publicité, ni au suivi,
+            et ne nécessitent donc pas de consentement.
+        </p>
+    </article>
+{% endblock %}
