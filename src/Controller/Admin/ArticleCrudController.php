@@ -52,10 +52,22 @@ class ArticleCrudController extends AbstractCrudController
             ->linkToUrl(fn (Article $article) => $this->generateUrl('article_show', ['slug' => $article->getSlug()]))
             ->setHtmlAttributes(['target' => '_blank']);
 
+        $export = Action::new('exportArticles', 'Exporter', 'fa fa-download')
+            ->linkToUrl($this->generateUrl('admin_articles_export'))
+            ->createAsGlobalAction();
+
+        $import = Action::new('importArticles', 'Importer', 'fa fa-upload')
+            ->linkToUrl($this->generateUrl('admin_articles_import'))
+            ->createAsGlobalAction();
+
         return $actions
             ->add(Crud::PAGE_INDEX, $preview)
             ->add(Crud::PAGE_EDIT, $preview)
+            ->add(Crud::PAGE_INDEX, $export)
+            ->add(Crud::PAGE_INDEX, $import)
             ->setPermission('preview', ArticleVoter::EDIT)
+            ->setPermission('exportArticles', 'ROLE_ADMIN')
+            ->setPermission('importArticles', 'ROLE_ADMIN')
             ->setPermission(Action::EDIT, ArticleVoter::EDIT)
             ->setPermission(Action::DELETE, ArticleVoter::DELETE);
     }

@@ -142,4 +142,19 @@ class ArticleRepository extends ServiceEntityRepository
         return implode(' ', array_map(fn (string $word) => '+' . $word . '*', $words));
     }
 
+    /**
+     * @return Article[]
+     */
+    public function findAllForExport(): array
+    {
+        return $this->createQueryBuilder('a')
+            ->addSelect('c', 'u', 't')
+            ->innerJoin('a.category', 'c')
+            ->innerJoin('a.author', 'u')
+            ->leftJoin('a.tags', 't')
+            ->orderBy('a.createdAt', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
 }
