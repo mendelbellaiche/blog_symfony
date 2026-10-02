@@ -69,53 +69,61 @@
     {% if article.published %}
         {% set comments = article.approvedComments %}
 
-        <section id="comments" class="mt-16 border-t border-stone-200 pt-10">
-            <h2 class="mb-6 text-2xl font-semibold text-stone-900">
-                Commentaires <span class="text-stone-400">({{ comments|length }})</span>
-            </h2>
+        <turbo-frame id="comments">
+            <section class="mt-16 border-t border-stone-200 pt-10">
+                <h2 class="mb-6 text-2xl font-semibold text-stone-900">
+                    Commentaires <span class="text-stone-400">({{ comments|length }})</span>
+                </h2>
 
-            {% if app.user %}
-                <div class="mb-8 rounded-xl border border-stone-200 bg-white p-5">
-                    {{ form_start(commentForm) }}
-                    {{ form_row(commentForm.content) }}
-                    <div class="flex justify-end">
-                        <button type="submit"
-                                class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700">
-                            Publier
-                        </button>
+                {% for message in app.flashes('comment') %}
+                    <div class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                        {{ message }}
                     </div>
-                    {{ form_end(commentForm) }}
-                </div>
-            {% else %}
-                <div class="mb-8 rounded-xl border border-dashed border-stone-300 p-5 text-center text-sm text-stone-500">
-                    <a href="{{ path('app_login') }}" class="font-medium text-indigo-600 hover:text-indigo-800">Connecte-toi</a>
-                    ou
-                    <a href="{{ path('app_register') }}" class="font-medium text-indigo-600 hover:text-indigo-800">crée un compte</a>
-                    pour laisser un commentaire.
-                </div>
-            {% endif %}
+                {% endfor %}
 
-            <div class="space-y-4">
-                {% for comment in comments %}
-                    <div class="flex gap-4 rounded-xl border border-stone-200 bg-white p-5">
-                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 font-semibold text-indigo-700">
-                            {{ comment.author.pseudo|first|upper }}
+                {% if app.user %}
+                    <div class="mb-8 rounded-xl border border-stone-200 bg-white p-5">
+                        {{ form_start(commentForm) }}
+                        {{ form_row(commentForm.content) }}
+                        <div class="flex justify-end">
+                            <button type="submit"
+                                    class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700">
+                                Publier
+                            </button>
                         </div>
-                        <div>
-                            <p class="text-sm">
-                                <span class="font-medium text-stone-900">{{ comment.author.pseudo }}</span>
-                                <span class="text-stone-400">· {{ comment.createdAt|date('d/m/Y') }}</span>
-                            </p>
-                            <p class="mt-1 leading-relaxed text-stone-600">{{ comment.content }}</p>
-                        </div>
+                        {{ form_end(commentForm) }}
                     </div>
                 {% else %}
-                    <p class="text-stone-500">Aucun commentaire pour le moment.</p>
-                {% endfor %}
-            </div>
+                    <div class="mb-8 rounded-xl border border-dashed border-stone-300 p-5 text-center text-sm text-stone-500">
+                        <a href="{{ path('app_login') }}" data-turbo-frame="_top" class="font-medium text-indigo-600 hover:text-indigo-800">Connecte-toi</a>
+                        ou
+                        <a href="{{ path('app_register') }}" class="font-medium text-indigo-600 hover:text-indigo-800">crée un compte</a>
+                        pour laisser un commentaire.
+                    </div>
+                {% endif %}
+
+                <div class="space-y-4">
+                    {% for comment in comments %}
+                        <div class="flex gap-4 rounded-xl border border-stone-200 bg-white p-5">
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-indigo-100 font-semibold text-indigo-700">
+                                {{ comment.author.pseudo|first|upper }}
+                            </div>
+                            <div>
+                                <p class="text-sm">
+                                    <span class="font-medium text-stone-900">{{ comment.author.pseudo }}</span>
+                                    <span class="text-stone-400">· {{ comment.createdAt|date('d/m/Y') }}</span>
+                                </p>
+                                <p class="mt-1 leading-relaxed text-stone-600">{{ comment.content }}</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p class="text-stone-500">Aucun commentaire pour le moment.</p>
+                    {% endfor %}
+                </div>
 
 
-        </section>
+            </section>
+        </turbo-frame>
 
     {% endif %}
 

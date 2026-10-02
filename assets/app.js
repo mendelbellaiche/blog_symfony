@@ -29,3 +29,10 @@ hljs.registerLanguage('sql', sql);
 document.addEventListener('turbo:load', () => {
     hljs.highlightAll();
 });
+
+// Si une page chargée dans une Turbo Frame ne contient pas cette frame,
+// on affiche la page complète au lieu du message « Content missing ».
+document.addEventListener('turbo:frame-missing', (event) => {
+    event.preventDefault();
+    event.detail.visit(event.detail.response);
+});

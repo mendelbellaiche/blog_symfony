@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Article;
 use App\Entity\Category;
 use App\Entity\Tag;
+use App\Moderation\ModerationMatcher;
 use App\Repository\ArticleRepository;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -63,6 +64,7 @@ final class ArticleController extends AbstractController
         Request $request,
         EntityManagerInterface $em,
         LoggerInterface $auditLogger,
+        ModerationMatcher $matcher,
         #[CurrentUser] ?User $user,
     ): Response {
         // Un article non publié n'est visible que par son auteur et l'admin
@@ -83,9 +85,12 @@ final class ArticleController extends AbstractController
             }
 
             if ($commentForm->isSubmitted() && $commentForm->isValid()) {
+                $needsReview = !$this->isGranted('ROLE_ADMIN')
+                    && $matcher->analyze($comment->getContent())['watch'] !== [];
+
                 $comment->setAuthor($user)
                     ->setArticle($article)
-                    ->setApproved($this->isGranted('ROLE_ADMIN'));
+                    ->setApproved(!$needsReview);
 
                 $em->persist($comment);
                 $em->flush();
@@ -96,7 +101,7 @@ final class ArticleController extends AbstractController
                     'approved' => $comment->isApproved(),
                 ]);
 
-                $this->addFlash('success', $comment->isApproved()
+                /* $this->addFlash('success', $comment->isApproved()
                     ? 'Ton commentaire a été publié.'
                     : 'Merci ! Ton commentaire sera visible après validation par un modérateur.'
                 );
@@ -104,7 +109,14 @@ final class ArticleController extends AbstractController
                 return $this->redirectToRoute('article_show', [
                     'slug' => $article->getSlug(),
                     '_fragment' => 'comments',
-                ]);
+                ]); */
+
+                $this->addFlash('comment', $comment->isApproved()
+                    ? 'Ton commentaire a été publié.'
+                    : 'Merci ! Ton commentaire sera visible après validation par un modérateur.'
+                );
+
+                return $this->redirectToRoute('article_show', ['slug' => $article->getSlug()]);
             }
         }
 
