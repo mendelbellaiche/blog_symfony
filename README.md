@@ -174,6 +174,128 @@ symfony console tailwind:build
 
 ---
 
+## Consulter les logs du serveur
+
+Nginx enregistre chaque requête reçue en production dans `/var/log/nginx/blog_access.log`, une ligne par requête. Les commandes ci-dessous se lancent **sur le serveur** et affichent les résultats en colonnes : date, adresse IP, méthode (`GET`, `POST`…), code de réponse et URL.
+
+```
+DATE                  IP             METHODE  CODE  URL
+02/Oct/2026:15:40:12  203.0.113.42   GET      200   /article/les-voters-symfony
+02/Oct/2026:15:41:03  198.51.100.7   POST     302   /login
+```
+
+Les commandes de comptage remplacent la date et l'heure par le jour seul, et ajoutent une colonne `NB` avec le nombre de requêtes identiques.
+
+Dans les exemples, remplacer `/article/les-voters-symfony` par la page voulue, et `203.0.113.42` par l'adresse IP voulue. Si la commande `column` est introuvable : `sudo apt install -y bsdextrautils`.
+
+### Suivre les requêtes en direct
+
+Affiche chaque nouvelle requête au moment où elle arrive. `Ctrl+C` pour arrêter.
+
+```bash
+sudo tail -f /var/log/nginx/blog_access.log | awk 'BEGIN {printf "%-20s  %-39s  %-7s  %-4s  %s\n", "DATE", "IP", "METHODE", "CODE", "URL"} {printf "%-20s  %-39s  %-7s  %-4s  %s\n", substr($4, 2), $1, substr($6, 2), $9, $7; fflush()}'
+```
+
+### Les 50 dernières requêtes
+
+```bash
+sudo tail -n 50 /var/log/nginx/blog_access.log | awk 'BEGIN {print "DATE IP METHODE CODE URL"} {print substr($4, 2), $1, substr($6, 2), $9, $7}' | column -t
+```
+
+### Les requêtes les plus fréquentes
+
+Les 20 combinaisons jour, IP, méthode et URL les plus fréquentes. Utile pour repérer un robot ou une IP trop active.
+
+```bash
+sudo awk '{print substr($4, 2, 11), $1, substr($6, 2), $7}' /var/log/nginx/blog_access.log | sort | uniq -c | sort -rn | head -20 | awk 'BEGIN {print "NB JOUR IP METHODE URL"} {print}' | column -t
+```
+
+### Les visites d'une page précise
+
+Le détail de chaque visite de la page :
+
+```bash
+sudo grep "/article/les-voters-symfony" /var/log/nginx/blog_access.log | awk 'BEGIN {print "DATE IP METHODE CODE URL"} {print substr($4, 2), $1, substr($6, 2), $9, $7}' | column -t
+```
+
+Le nombre de visites de la page, par jour et par IP :
+
+```bash
+sudo grep "/article/les-voters-symfony" /var/log/nginx/blog_access.log | awk '{print substr($4, 2, 11), $1, substr($6, 2), $7}' | sort | uniq -c | sort -rn | awk 'BEGIN {print "NB JOUR IP METHODE URL"} {print}' | column -t
+```
+
+### Toutes les requêtes d'une IP
+
+Le parcours complet d'une adresse IP sur le site :
+
+```bash
+sudo grep "^203.0.113.42 " /var/log/nginx/blog_access.log | awk 'BEGIN {print "DATE IP METHODE CODE URL"} {print substr($4, 2), $1, substr($6, 2), $9, $7}' | column -t
+```
+
+### Les requêtes du jour
+
+Le détail de toutes les requêtes reçues aujourd'hui :
+
+```bash
+sudo grep "$(date +%d/%b/%Y)" /var/log/nginx/blog_access.log | awk 'BEGIN {print "DATE IP METHODE CODE URL"} {print substr($4, 2), $1, substr($6, 2), $9, $7}' | column -t
+```
+
+Le résumé du jour : les 20 requêtes les plus fréquentes, par IP, méthode et URL :
+
+```bash
+sudo grep "$(date +%d/%b/%Y)" /var/log/nginx/blog_access.log | awk '{print substr($4, 2, 11), $1, substr($6, 2), $7}' | sort | uniq -c | sort -rn | head -20 | awk 'BEGIN {print "NB JOUR IP METHODE URL"} {print}' | column -t
+```
+
+### Les tentatives de connexion
+
+Chaque envoi du formulaire de connexion. Une même IP qui revient de nombreuses fois en quelques minutes signale probablement une tentative de deviner un mot de passe.
+
+```bash
+sudo grep '"POST /login' /var/log/nginx/blog_access.log | awk 'BEGIN {print "DATE IP METHODE CODE URL"} {print substr($4, 2), $1, substr($6, 2), $9, $7}' | column -t
+```
+
+### Toutes les requêtes POST
+
+Toutes les actions envoyées au site : connexions, inscriptions, commentaires, formulaires du back-office.
+
+```bash
+sudo grep '"POST ' /var/log/nginx/blog_access.log | awk 'BEGIN {print "DATE IP METHODE CODE URL"} {print substr($4, 2), $1, substr($6, 2), $9, $7}' | column -t
+```
+
+### Les erreurs
+
+Le détail des requêtes en erreur (code 400 et plus) : pages introuvables (404), accès refusés (403), erreurs du serveur (500). On y voit notamment les robots qui testent des adresses comme `/wp-login.php` ou `/.env`.
+
+```bash
+sudo awk 'BEGIN {print "DATE IP METHODE CODE URL"} $9 >= 400 {print substr($4, 2), $1, substr($6, 2), $9, $7}' /var/log/nginx/blog_access.log | column -t
+```
+
+Les 20 erreurs les plus fréquentes, par jour :
+
+```bash
+sudo awk '$9 >= 400 {print substr($4, 2, 11), $1, substr($6, 2), $7}' /var/log/nginx/blog_access.log | sort | uniq -c | sort -rn | head -20 | awk 'BEGIN {print "NB JOUR IP METHODE URL"} {print}' | column -t
+```
+
+### Les jours précédents
+
+Ubuntu archive les logs chaque jour : la veille est dans `blog_access.log.1`, les jours plus anciens dans des fichiers compressés (`blog_access.log.2.gz`, etc.), conservés 14 jours. `zgrep` lit directement ces fichiers compressés.
+
+Les tentatives de connexion des jours précédents :
+
+```bash
+sudo zgrep -h '"POST /login' /var/log/nginx/blog_access.log.*.gz | awk 'BEGIN {print "DATE IP METHODE CODE URL"} {print substr($4, 2), $1, substr($6, 2), $9, $7}' | column -t
+```
+
+Toutes les requêtes d'une IP sur les deux dernières semaines :
+
+```bash
+{ sudo zgrep -h "^203.0.113.42 " /var/log/nginx/blog_access.log.*.gz; sudo grep -h "^203.0.113.42 " /var/log/nginx/blog_access.log /var/log/nginx/blog_access.log.1; } | awk 'BEGIN {print "DATE IP METHODE CODE URL"} {print substr($4, 2), $1, substr($6, 2), $9, $7}' | column -t
+```
+
+> Les adresses IP sont des données personnelles au sens du RGPD : ces logs servent uniquement à la sécurité et au diagnostic, et sont supprimés automatiquement après 14 jours.
+
+---
+
 ## Structure du projet
 
 ```
