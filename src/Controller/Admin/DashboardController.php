@@ -2,6 +2,8 @@
 
 namespace App\Controller\Admin;
 
+use App\Moderation\ModerationMatcher;
+use App\Repository\CommentRepository;
 use App\Repository\DailyStatRepository;
 use App\Stats\DailyStatsCalculator;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
@@ -18,6 +20,8 @@ class DashboardController extends AbstractDashboardController
     public function __construct(
         private DailyStatsCalculator $calculator,
         private DailyStatRepository $dailyStatRepository,
+        private CommentRepository $commentRepository,
+        private ModerationMatcher $matcher,
     ) {
     }
 
@@ -57,11 +61,36 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::section('Communauté')->setPermission('ROLE_ADMIN');
         yield MenuItem::linkTo(CommentCrudController::class, 'Commentaires', 'fa fa-comments')
             ->setPermission('ROLE_ADMIN');
+
+        $toModerate = MenuItem::linkToUrl('À modérer', 'fa fa-shield-halved', $this->generateUrl('admin_comment_moderation'))
+            ->setPermission('ROLE_ADMIN');
+        $count = $this->isGranted('ROLE_ADMIN') ? $this->countCommentsToModerate() : 0;
+        if ($count > 0) {
+            $toModerate->setBadge($count, 'danger');
+        }
+        yield $toModerate;
+
+        yield MenuItem::linkTo(ModerationWordCrudController::class, 'Listes de mots', 'fa fa-ban')
+            ->setPermission('ROLE_ADMIN');
         yield MenuItem::linkTo(UserCrudController::class, 'Utilisateurs', 'fa fa-users')
             ->setPermission('ROLE_ADMIN');
 
         yield MenuItem::section();
         yield MenuItem::linkToUrl('Retour au blog', 'fa fa-arrow-left', $this->generateUrl('article_index'));
+    }
+
+    private function countCommentsToModerate(): int
+    {
+        $count = 0;
+
+        foreach ($this->commentRepository->findModerationCandidates($this->matcher->allTerms()) as $comment) {
+            $result = $this->matcher->analyze($comment->getContent());
+            if ($result['forbidden'] || $result['watch']) {
+                $count++;
+            }
+        }
+
+        return $count;
     }
 
 }

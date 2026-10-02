@@ -1,0 +1,48 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}À modérer{% endblock %}
+
+{% block main %}
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">{{ message }}</div>
+    {% endfor %}
+
+    {% if items is empty %}
+        <p>Aucun commentaire à vérifier. Tout est en ordre.</p>
+    {% endif %}
+
+    {% for item in items %}
+        {% set comment = item.comment %}
+
+        <div style="border: 1px solid var(--border-color, #e5e7eb); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem;">
+            <div style="display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; font-size: .85rem; opacity: .8;">
+                <strong>{{ comment.author.pseudo }}</strong>
+                <span>sur « {{ comment.article.title }} »</span>
+                <span>· {{ comment.createdAt|date('d/m/Y à H:i') }}</span>
+                <span>· {{ comment.approved ? 'Publié' : 'Non publié' }}</span>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: .4rem; margin: .6rem 0;">
+                {% for term in item.forbidden %}
+                    <span style="background: #fee2e2; color: #991b1b; border-radius: 999px; padding: .1rem .6rem; font-size: .8rem;">⛔ {{ term }}</span>
+                {% endfor %}
+                {% for term in item.watch %}
+                    <span style="background: #fef3c7; color: #92400e; border-radius: 999px; padding: .1rem .6rem; font-size: .8rem;">⚠ {{ term }}</span>
+                {% endfor %}
+            </div>
+
+            <p style="white-space: pre-line; margin: 0 0 1rem;">{{ comment.content }}</p>
+
+            <div style="display: flex; gap: .5rem;">
+                {% for decision, label in {keep: 'Conserver', hide: 'Masquer', delete: 'Supprimer'} %}
+                    <form method="post" action="{{ path('admin_comment_moderate', {entityId: comment.id}) }}"
+                          {% if decision == 'delete' %}onsubmit="return confirm('Supprimer définitivement ce commentaire ?');"{% endif %}>
+                        <input type="hidden" name="_token" value="{{ csrf_token('moderate' ~ comment.id) }}">
+                        <input type="hidden" name="decision" value="{{ decision }}">
+                        <button type="submit" class="btn {{ decision == 'delete' ? 'btn-danger' : 'btn-secondary' }}">{{ label }}</button>
+                    </form>
+                {% endfor %}
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}

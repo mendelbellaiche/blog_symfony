@@ -40,4 +40,33 @@ class CommentRepository extends ServiceEntityRepository
 //            ->getOneOrNullResult()
 //        ;
 //    }
+
+    /**
+     * Commentaires pas encore vérifiés qui contiennent peut-être un des termes.
+     *
+     * @param string[] $terms
+     *
+     * @return Comment[]
+     */
+    public function findModerationCandidates(array $terms): array
+    {
+        if (!$terms) {
+            return [];
+        }
+
+        $qb = $this->createQueryBuilder('c')
+            ->addSelect('a', 'u')
+            ->innerJoin('c.article', 'a')
+            ->innerJoin('c.author', 'u')
+            ->where('c.moderatedAt IS NULL')
+            ->orderBy('c.createdAt', 'DESC');
+
+        $conditions = $qb->expr()->orX();
+        foreach (array_values($terms) as $i => $term) {
+            $conditions->add('c.content LIKE :term' . $i);
+            $qb->setParameter('term' . $i, '%' . addcslashes(rtrim($term, '*'), '%_\\') . '%');
+        }
+
+        return $qb->andWhere($conditions)->getQuery()->getResult();
+    }
 }

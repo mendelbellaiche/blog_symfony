@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\CommentRepository;
+use App\Validator\NoForbiddenWords;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -23,6 +24,7 @@ class Comment
         minMessage: 'Le commentaire doit faire au moins {{ limit }} caractères.',
         maxMessage: 'Le commentaire ne peut pas dépasser {{ limit }} caractères.',
     )]
+    #[NoForbiddenWords]
     private ?string $content = null;
 
     #[ORM\Column]
@@ -38,6 +40,21 @@ class Comment
     #[ORM\ManyToOne(inversedBy: 'comments')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Article $article = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $moderatedAt = null;
+
+    public function getModeratedAt(): ?\DateTimeImmutable
+    {
+        return $this->moderatedAt;
+    }
+
+    public function setModeratedAt(?\DateTimeImmutable $moderatedAt): static
+    {
+        $this->moderatedAt = $moderatedAt;
+
+        return $this;
+    }
 
     public function __construct()
     {
