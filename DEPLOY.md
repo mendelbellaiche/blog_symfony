@@ -497,6 +497,9 @@ sudo supervisorctl restart blog-scheduler
 
 # Lister les tâches planifiées
 php bin/console debug:scheduler
+
+# Calculer les statistiques de visites du jour (par défaut : la veille)
+php bin/console app:compute-daily-stats --date=today
 ```
 
 ### Donner le rôle administrateur à un utilisateur

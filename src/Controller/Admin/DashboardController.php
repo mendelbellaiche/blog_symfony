@@ -2,6 +2,8 @@
 
 namespace App\Controller\Admin;
 
+use App\Repository\DailyStatRepository;
+use App\Stats\DailyStatsCalculator;
 use EasyCorp\Bundle\EasyAdminBundle\Attribute\AdminDashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Dashboard;
 use EasyCorp\Bundle\EasyAdminBundle\Config\MenuItem;
@@ -13,15 +15,24 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_AUTHOR')]
 class DashboardController extends AbstractDashboardController
 {
-    public function index(): Response
-    {
-        if ($this->isGranted('ROLE_ADMIN')) {
-            return $this->redirectToRoute('admin_comment_index');
-        }
-
-        return $this->redirectToRoute('admin_article_index');
+    public function __construct(
+        private DailyStatsCalculator $calculator,
+        private DailyStatRepository $dailyStatRepository,
+    ) {
     }
 
+    public function index(): Response
+    {
+        // Les auteurs n'ont pas accès aux statistiques
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            return $this->redirectToRoute('admin_article_index');
+        }
+
+        return $this->render('admin/dashboard.html.twig', [
+            'today' => $this->calculator->compute(new \DateTimeImmutable('today')),
+            'stats' => $this->dailyStatRepository->findLastDays(30),
+        ]);
+    }
     public function configureDashboard(): Dashboard
     {
         return Dashboard::new()
@@ -30,6 +41,12 @@ class DashboardController extends AbstractDashboardController
 
     public function configureMenuItems(): iterable
     {
+
+        yield MenuItem::section('Principal')->setPermission('ROLE_ADMIN');
+
+        yield MenuItem::linkToDashboard('Tableau de bord', 'fa fa-chart-line')
+            ->setPermission('ROLE_ADMIN');
+
         yield MenuItem::section('Contenu');
         yield MenuItem::linkTo(ArticleCrudController::class, 'Articles', 'fa fa-newspaper');
         yield MenuItem::linkTo(CategoryCrudController::class, 'Catégories', 'fa fa-folder')

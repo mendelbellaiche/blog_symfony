@@ -1,0 +1,67 @@
+{% extends '@EasyAdmin/page/content.html.twig' %}
+
+{% block content_title %}Tableau de bord{% endblock %}
+
+{% block main %}
+    {% set cards = [
+        {label: 'Visiteurs', value: today.visitors},
+        {label: 'Pages vues', value: today.pageViews},
+        {label: 'Inscriptions', value: today.registrations},
+        {label: 'Commentaires', value: today.comments},
+    ] %}
+
+    <h2 style="font-size: 1rem; margin-bottom: .75rem;">Aujourd'hui, en direct</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        {% for card in cards %}
+            <div style="border: 1px solid var(--border-color, #e5e7eb); border-radius: 12px; padding: 1rem 1.25rem;">
+                <div style="font-size: .85rem; opacity: .7;">{{ card.label }}</div>
+                <div style="font-size: 2rem; font-weight: 700;">{{ card.value }}</div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <h2 style="font-size: 1rem; margin-bottom: .75rem;">30 derniers jours</h2>
+
+    {% if stats is empty %}
+        <p>Aucune donnée pour l'instant : le premier calcul aura lieu cette nuit à 0h05.</p>
+    {% else %}
+        {% set maxVisitors = max(stats|map(s => s.visitors)|merge([1])) %}
+
+        <table class="table datagrid">
+            <thead>
+            <tr>
+                <th>Jour</th>
+                <th>Visiteurs</th>
+                <th style="text-align: right;">Pages vues</th>
+                <th style="text-align: right;">Inscriptions</th>
+                <th style="text-align: right;">Commentaires</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for stat in stats %}
+                <tr>
+                    <td>{{ stat.day|date('D d/m') }}</td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: .5rem;">
+                            <div style="height: 8px; border-radius: 4px; background: #6366f1; width: {{ (stat.visitors / maxVisitors * 160)|round }}px;"></div>
+                            <span>{{ stat.visitors }}</span>
+                        </div>
+                    </td>
+                    <td style="text-align: right;">{{ stat.pageViews }}</td>
+                    <td style="text-align: right;">{{ stat.registrations }}</td>
+                    <td style="text-align: right;">{{ stat.comments }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            <tfoot>
+            <tr style="font-weight: 700;">
+                <td>Total</td>
+                <td>{{ stats|reduce((sum, s) => sum + s.visitors, 0) }}</td>
+                <td style="text-align: right;">{{ stats|reduce((sum, s) => sum + s.pageViews, 0) }}</td>
+                <td style="text-align: right;">{{ stats|reduce((sum, s) => sum + s.registrations, 0) }}</td>
+                <td style="text-align: right;">{{ stats|reduce((sum, s) => sum + s.comments, 0) }}</td>
+            </tr>
+            </tfoot>
+        </table>
+    {% endif %}
+{% endblock %}

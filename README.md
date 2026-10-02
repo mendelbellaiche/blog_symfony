@@ -165,6 +165,9 @@ symfony console app:publish-scheduled-articles
 # Simuler le nettoyage des images orphelines, sans rien supprimer
 symfony console app:clean-orphan-images --dry-run --min-age=0
 
+# Calculer les statistiques de visites du jour (par défaut : la veille)
+symfony console app:compute-daily-stats --date=today
+
 # Compiler le CSS une seule fois (sans watcher)
 symfony console tailwind:build
 ```
